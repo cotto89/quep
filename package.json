@@ -3,6 +3,9 @@
   "description": "async queue processor",
   "version": "0.0.1",
   "author": "cotto",
+  "bugs": {
+    "url": "https://github.com/cotto89/quep/issues"
+  },
   "dependencies": {
     "@types/node": "^6.0.46"
   },
@@ -20,7 +23,21 @@
     "tslint": "^4.0.2",
     "typescript": "^2.0.6"
   },
+  "files": [
+    "dist/src",
+    "README.md",
+    "LICENCE"
+  ],
+  "keywords": [
+    "queue",
+    "task"
+  ],
   "license": "MIT",
+  "main": "dist/src/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cotto89/fn-eventify.git"
+  },
   "scripts": {
     "build": "npm-run-all build:*",
     "build:src": "tsc",
@@ -28,5 +45,6 @@
     "clean:dist": "rimraf ./dist",
     "lint": "tslint src/**/*.ts",
     "test": "NODE_ENV=test mocha"
-  }
+  },
+  "types": "dist/index.d.ts"
 }
