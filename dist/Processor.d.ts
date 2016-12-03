@@ -1,11 +1,4 @@
-/// <reference types="node" />
-import events = require('events');
-export declare const EVENT: {
-    START: string;
-    DONE: string;
-    ERROR: string;
-};
-export declare class Processor<Queue extends any[]> extends events.EventEmitter {
+export declare class Processor<Queue extends any[]> {
     queue: Queue;
     processingIdx: number;
     constructor(queue?: Queue);

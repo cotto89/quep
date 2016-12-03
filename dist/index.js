@@ -5,13 +5,16 @@ function __export(m) {
 const Processor_1 = require('./Processor');
 __export(require('./Processor'));
 function stream(src, queue) {
-    const processor = new Processor_1.Processor([src].concat((queue || [])));
-    const exec = (value) => processor.exec(value);
-    const on = (event, listener) => {
-        processor.on(event, listener);
-        return () => processor.removeListener(event, listener);
+    const exec = (value) => {
+        const processor = new Processor_1.Processor([src].concat((queue || [])));
+        return processor.exec(value);
     };
-    const ret = Object.assign(exec, { processor, on });
+    const option = {
+        manual() {
+            return new Processor_1.Processor([src].concat((queue || [])));
+        }
+    };
+    const ret = Object.assign(exec, option);
     return ret;
 }
 Object.defineProperty(exports, "__esModule", { value: true });

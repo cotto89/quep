@@ -1,29 +1,17 @@
 "use strict";
-const events = require('events');
-exports.EVENT = {
-    START: 'START',
-    DONE: 'DONE',
-    ERROR: 'ERROR'
-};
-class Processor extends events.EventEmitter {
+class Processor {
     constructor(queue = []) {
-        super();
         this.processingIdx = 0;
         this.queue = queue;
     }
     exec(value) {
-        if (this.processingIdx === 0) {
-            this.emit(exports.EVENT.START);
-        }
         const result = this.next(value);
         if (result.done) {
             this.processingIdx = 0;
-            this.emit(exports.EVENT.DONE, result.value);
             return Promise.resolve(result.value);
         }
         return Promise.resolve(result.value)
-            .then(v => this.exec(v))
-            .catch(err => this.emit(exports.EVENT.ERROR, err));
+            .then(v => this.exec(v));
     }
     next(value) {
         const task = this.queue[this.processingIdx];
