@@ -7,13 +7,17 @@ export default function stream<Arg, Queue extends any[]>(
     queue?: Queue
 ) {
 
-    const processor = new Processor([src].concat((queue || [])));
-    const exec = (value?: Arg) => processor.exec(value);
-    const on = (event: string, listener: Function) => {
-        processor.on(event, listener);
-        return () => processor.removeListener(event, listener);
+    const exec = (value?: Arg) => {
+        const processor = new Processor([src].concat((queue || [])));
+        return processor.exec(value);
     };
 
-    const ret = Object.assign(exec, { processor, on });
+    const option = {
+        manual() {
+            return new Processor([src].concat((queue || [])));
+        }
+    };
+
+    const ret = Object.assign(exec, option);
     return ret;
 }
