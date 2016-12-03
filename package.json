@@ -1,7 +1,7 @@
 {
   "name": "quep",
   "description": "async queue processor",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "author": "cotto",
   "bugs": {
     "url": "https://github.com/cotto89/quep/issues"
@@ -24,7 +24,7 @@
     "typescript": "^2.0.6"
   },
   "files": [
-    "dist/src",
+    "dist",
     "README.md",
     "LICENCE"
   ],
