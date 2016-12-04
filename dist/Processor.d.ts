@@ -10,7 +10,7 @@ export declare class Processor<Queue extends any[]> {
     protected queue: Queue;
     protected command: Command;
     constructor(notifier: events.EventEmitter, queue?: Queue);
-    exec(value?: any): Promise<any> | Promise<Status>;
+    exec(value?: any): Promise<any>;
     next(value?: any): Status;
     abort(): "ABORT";
     suspend(): "SUSPEND";

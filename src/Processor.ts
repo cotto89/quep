@@ -17,7 +17,7 @@ export class Processor<Queue extends any[]> {
         this.queue = queue;
     }
 
-    exec(value?: any): Promise<any> | Promise<Status> {
+    exec(value?: any): Promise<any> {
         const status = this.next(value);
 
         if (this.command === 'SUSPEND') {

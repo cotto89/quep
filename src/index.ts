@@ -1,6 +1,8 @@
 import events = require('events');
-import * as Core from './Processor';
+import { Processor, Status } from './Processor';
 export * from './Processor';
+
+export type Listener = (status: Status) => any;
 
 export default function quep<Arg, Queue extends Function[]>(
     src: (value?: Arg) => any,
@@ -8,18 +10,24 @@ export default function quep<Arg, Queue extends Function[]>(
 ) {
 
     const notifier = new events.EventEmitter();
-    let processor: Core.Processor<any>;
+    let processor: Processor<any>;
+
+    function on(event: 'ABORT' | 'DONE' | 'NEXT', listener: Listener): events.EventEmitter;
+    function on(event: 'SUSPEND', listener: (status: Status, resume: Function) => any): events.EventEmitter;
+    function on(event: string, listener: Listener) {
+        return notifier.on(event, listener);
+    }
 
     const operation = {
-        manual: () => new Core.Processor(notifier, [src, ...queue]),
+        manual: () => new Processor(notifier, [src, ...queue]),
         exec: (value?: Arg) => {
-            processor = new Core.Processor(notifier, [src, ...queue]);
+            processor = new Processor(notifier, [src, ...queue]);
             return processor.exec(value);
         },
         abort: () => processor.abort(),
         suspend: () => processor.suspend(),
         resume: (value?: any) => processor.resume(value),
-        on: notifier.on.bind(notifier),
+        on
     };
 
     const operator = Object.assign(operation, { notifier });
