@@ -1,34 +1,71 @@
-export class Processor<Queue extends any[]>  {
-    queue: Queue;
-    processingIdx: number = 0;
+import events = require('events');
 
-    constructor(queue: Queue = [] as any) {
+export type Command = 'EXEC' | 'ABORT' | 'SUSPEND' | 'RESUME' | 'DONE';
+
+export interface Status {
+    value: any;
+    done: boolean;
+}
+
+export class Processor<Queue extends any[]> {
+    notifier: events.EventEmitter;
+    protected queue: Queue;
+    protected command: Command = 'EXEC';
+
+    constructor(notifier: events.EventEmitter, queue: Queue = [] as any) {
+        this.notifier = notifier;
         this.queue = queue;
     }
 
-    exec(value?: any): Promise<any> {
+    exec(value?: any): Promise<any> | Promise<Status> {
+        const status = this.next(value);
 
-        const result = this.next(value);
-
-        if (result.done) {
-            this.processingIdx = 0;
-            return Promise.resolve(result.value);
+        if (this.command === 'SUSPEND') {
+            const s = Object.assign({}, status);
+            this.notifier.emit(this.command, s, this.resume.bind(this, s.value));
+            return Promise.resolve(s);
         }
 
-        return Promise.resolve(result.value)
-            .then(v => this.exec(v));
+        if (this.command === 'ABORT') {
+            const s = Object.assign({}, status, { done: true });
+            this.notifier.emit(this.command, s);
+            return Promise.resolve(s);
+        }
+
+        if (status.done) {
+            this.command = 'DONE';
+            const s = Object.assign({}, status, { done: true });
+            this.notifier.emit(this.command, s);
+            return Promise.resolve(s);
+        }
+
+        return Promise.resolve(status.value).then(v => this.exec(v));
     }
 
-    next(value?: any) {
-        const task = this.queue[this.processingIdx];
+    next(value?: any): Status {
+        if (this.queue.length <= 0) {
+            this.command = 'DONE';
+            const s = { value, done: true };
+            this.notifier.emit(this.command, s);
+            return s;
+        }
 
-        const max = this.queue.length;
-        const next = this.processingIdx + 1;
-        this.processingIdx = max > next ? next : 0;
+        const task = this.queue.shift();
+        const s = { value: task(value), done: this.queue.length <= 0 };
+        this.notifier.emit('NEXT', s);
+        return s;
+    }
 
-        return {
-            value: task(value),
-            done: this.processingIdx <= 0,
-        };
+    abort() {
+        return this.command = 'ABORT';
+    }
+
+    suspend() {
+        return this.command = 'SUSPEND';
+    }
+
+    resume(value?: any) {
+        this.command = 'RESUME';
+        return Promise.resolve(value).then(v => this.exec(v));
     }
 }

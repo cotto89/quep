@@ -1,27 +1,51 @@
 "use strict";
 class Processor {
-    constructor(queue = []) {
-        this.processingIdx = 0;
+    constructor(notifier, queue = []) {
+        this.command = 'EXEC';
+        this.notifier = notifier;
         this.queue = queue;
     }
     exec(value) {
-        const result = this.next(value);
-        if (result.done) {
-            this.processingIdx = 0;
-            return Promise.resolve(result.value);
+        const status = this.next(value);
+        if (this.command === 'SUSPEND') {
+            const s = Object.assign({}, status);
+            this.notifier.emit(this.command, s, this.resume.bind(this, s.value));
+            return Promise.resolve(s);
         }
-        return Promise.resolve(result.value)
-            .then(v => this.exec(v));
+        if (this.command === 'ABORT') {
+            const s = Object.assign({}, status, { done: true });
+            this.notifier.emit(this.command, s);
+            return Promise.resolve(s);
+        }
+        if (status.done) {
+            this.command = 'DONE';
+            const s = Object.assign({}, status, { done: true });
+            this.notifier.emit(this.command, s);
+            return Promise.resolve(s);
+        }
+        return Promise.resolve(status.value).then(v => this.exec(v));
     }
     next(value) {
-        const task = this.queue[this.processingIdx];
-        const max = this.queue.length;
-        const next = this.processingIdx + 1;
-        this.processingIdx = max > next ? next : 0;
-        return {
-            value: task(value),
-            done: this.processingIdx <= 0,
-        };
+        if (this.queue.length <= 0) {
+            this.command = 'DONE';
+            const s = { value, done: true };
+            this.notifier.emit(this.command, s);
+            return s;
+        }
+        const task = this.queue.shift();
+        const s = { value: task(value), done: this.queue.length <= 0 };
+        this.notifier.emit('NEXT', s);
+        return s;
+    }
+    abort() {
+        return this.command = 'ABORT';
+    }
+    suspend() {
+        return this.command = 'SUSPEND';
+    }
+    resume(value) {
+        this.command = 'RESUME';
+        return Promise.resolve(value).then(v => this.exec(v));
     }
 }
 exports.Processor = Processor;

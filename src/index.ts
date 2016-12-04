@@ -1,23 +1,28 @@
-import { Processor } from './Processor';
-
+import events = require('events');
+import * as Core from './Processor';
 export * from './Processor';
 
-export default function stream<Arg, Queue extends any[]>(
+export default function quep<Arg, Queue extends Function[]>(
     src: (value?: Arg) => any,
-    queue?: Queue
+    queue: Queue = [] as any
 ) {
 
-    const exec = (value?: Arg) => {
-        const processor = new Processor([src].concat((queue || [])));
-        return processor.exec(value);
+    const notifier = new events.EventEmitter();
+    let processor: Core.Processor<any>;
+
+    const operation = {
+        manual: () => new Core.Processor(notifier, [src, ...queue]),
+        exec: (value?: Arg) => {
+            processor = new Core.Processor(notifier, [src, ...queue]);
+            return processor.exec(value);
+        },
+        abort: () => processor.abort(),
+        suspend: () => processor.suspend(),
+        resume: (value?: any) => processor.resume(value),
+        on: notifier.on.bind(notifier),
     };
 
-    const option = {
-        manual() {
-            return new Processor([src].concat((queue || [])));
-        }
-    };
+    const operator = Object.assign(operation, { notifier });
 
-    const ret = Object.assign(exec, option);
-    return ret;
+    return operator;
 }

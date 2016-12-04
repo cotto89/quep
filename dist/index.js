@@ -2,21 +2,26 @@
 function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
-const Processor_1 = require('./Processor');
+const events = require('events');
+const Core = require('./Processor');
 __export(require('./Processor'));
-function stream(src, queue) {
-    const exec = (value) => {
-        const processor = new Processor_1.Processor([src].concat((queue || [])));
-        return processor.exec(value);
+function quep(src, queue = []) {
+    const notifier = new events.EventEmitter();
+    let processor;
+    const operation = {
+        manual: () => new Core.Processor(notifier, [src, ...queue]),
+        exec: (value) => {
+            processor = new Core.Processor(notifier, [src, ...queue]);
+            return processor.exec(value);
+        },
+        abort: () => processor.abort(),
+        suspend: () => processor.suspend(),
+        resume: (value) => processor.resume(value),
+        on: notifier.on.bind(notifier),
     };
-    const option = {
-        manual() {
-            return new Processor_1.Processor([src].concat((queue || [])));
-        }
-    };
-    const ret = Object.assign(exec, option);
-    return ret;
+    const operator = Object.assign(operation, { notifier });
+    return operator;
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = stream;
+exports.default = quep;
 //# sourceMappingURL=index.js.map
