@@ -1,7 +1,7 @@
 {
   "name": "quep",
   "description": "async queue processor",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "author": "cotto",
   "bugs": {
     "url": "https://github.com/cotto89/quep/issues"
@@ -36,7 +36,7 @@
   "main": "dist/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cotto89/fn-eventify.git"
+    "url": "https://github.com/cotto89/quep.git"
   },
   "scripts": {
     "build": "npm-run-all build:*",
